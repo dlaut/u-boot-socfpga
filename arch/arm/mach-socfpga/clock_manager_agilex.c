@@ -66,7 +66,8 @@ unsigned int cm_get_l4_sys_free_clk_hz(void)
 u32 cm_get_qspi_controller_clk_hz(void)
 {
 	return readl(socfpga_get_sysmgr_addr() +
-		     SYSMGR_SOC64_BOOT_SCRATCH_COLD0);
+		     SYSMGR_SOC64_BOOT_SCRATCH_COLD0) &
+		     ALT_SYSMGR_SCRATCH_REG_0_QSPI_REFCLK_MASK;
 }
 
 void cm_print_clock_quick_summary(void)
