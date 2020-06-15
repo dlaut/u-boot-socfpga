@@ -51,14 +51,17 @@ config SYS_TEXT_BASE
 
 config ARMV8_PSCI_NR_CPUS
 	default 4 if TARGET_SOCFPGA_AGILEX
+	default 4 if TARGET_SOCFPGA_DM
 	default 4 if TARGET_SOCFPGA_STRATIX10
 
 config ARMV8_SECURE_BASE
 	default 0x00001000 if TARGET_SOCFPGA_AGILEX && ARMV8_PSCI
+	default 0x00001000 if TARGET_SOCFPGA_DM && ARMV8_PSCI
 	default 0x00001000 if TARGET_SOCFPGA_STRATIX10 && ARMV8_PSCI
 
 config SYS_HAS_ARMV8_SECURE_BASE
 	default y if TARGET_SOCFPGA_AGILEX && ARMV8_PSCI
+	default y if TARGET_SOCFPGA_DM && ARMV8_PSCI
 	default y if TARGET_SOCFPGA_STRATIX10 && ARMV8_PSCI
 
 config TARGET_SOCFPGA_AGILEX
@@ -99,6 +102,18 @@ config TARGET_SOCFPGA_ARRIA10
 config TARGET_SOCFPGA_CYCLONE5
 	bool
 	select TARGET_SOCFPGA_GEN5
+
+config TARGET_SOCFPGA_DM
+	bool
+	select ARMV8_MULTIENTRY
+	select ARMV8_PSCI if !SPL_ATF
+	select ARMV8_SEC_FIRMWARE_SUPPORT if !SPL_ATF
+	select ARMV8_SET_SMPEN
+	select CLK
+	select FPGA_INTEL_SDM_MAILBOX
+	select NCORE_CACHE
+	select SPL_ALTERA_SDRAM
+	select SPL_CLK if SPL
 
 config TARGET_SOCFPGA_GEN5
 	bool
@@ -149,6 +164,14 @@ config TARGET_SOCFPGA_ARRIA5_SOCDK
 config TARGET_SOCFPGA_CYCLONE5_SOCDK
 	bool "Altera SOCFPGA SoCDK (Cyclone V)"
 	select TARGET_SOCFPGA_CYCLONE5
+
+config TARGET_SOCFPGA_DM_SIMICS
+	bool "Intel SOCFPGA SoCDK (Diamond Mesa)"
+	select TARGET_SOCFPGA_DM
+
+config TARGET_SOCFPGA_DM_SOCDK
+	bool "Intel SOCFPGA SoCDK (Diamond Mesa)"
+	select TARGET_SOCFPGA_DM
 
 config TARGET_SOCFPGA_DEVBOARDS_DBM_SOC1
 	bool "Devboards DBM-SoC1 (Cyclone V)"
@@ -202,6 +225,8 @@ config SYS_BOARD
 	default "de0-nano-soc" if TARGET_SOCFPGA_TERASIC_DE0_NANO
 	default "de1-soc" if TARGET_SOCFPGA_TERASIC_DE1_SOC
 	default "de10-nano" if TARGET_SOCFPGA_TERASIC_DE10_NANO
+	default "dm-socdk" if TARGET_SOCFPGA_DM_SIMICS
+	default "dm-socdk" if TARGET_SOCFPGA_DM_SOCDK
 	default "is1" if TARGET_SOCFPGA_IS1
 	default "mcvevk" if TARGET_SOCFPGA_ARIES_MCVEVK
 	default "secu1" if TARGET_SOCFPGA_ARRIA5_SECU1
@@ -212,7 +237,6 @@ config SYS_BOARD
 	default "vining_fpga" if TARGET_SOCFPGA_SOFTING_VINING_FPGA
 
 config SYS_VENDOR
-	default "intel" if TARGET_SOCFPGA_AGILEX_SOCDK
 	default "altera" if TARGET_SOCFPGA_ARRIA5_SOCDK
 	default "altera" if TARGET_SOCFPGA_ARRIA10_SOCDK
 	default "altera" if TARGET_SOCFPGA_CYCLONE5_SOCDK
@@ -220,6 +244,9 @@ config SYS_VENDOR
 	default "aries" if TARGET_SOCFPGA_ARIES_MCVEVK
 	default "devboards" if TARGET_SOCFPGA_DEVBOARDS_DBM_SOC1
 	default "ebv" if TARGET_SOCFPGA_EBV_SOCRATES
+	default "intel" if TARGET_SOCFPGA_AGILEX_SOCDK
+	default "intel" if TARGET_SOCFPGA_DM_SIMICS
+	default "intel" if TARGET_SOCFPGA_DM_SOCDK
 	default "keymile" if TARGET_SOCFPGA_ARRIA5_SECU1
 	default "softing" if TARGET_SOCFPGA_SOFTING_VINING_FPGA
 	default "terasic" if TARGET_SOCFPGA_TERASIC_DE0_NANO
@@ -240,6 +267,8 @@ config SYS_CONFIG_NAME
 	default "socfpga_de0_nano_soc" if TARGET_SOCFPGA_TERASIC_DE0_NANO
 	default "socfpga_de1_soc" if TARGET_SOCFPGA_TERASIC_DE1_SOC
 	default "socfpga_de10_nano" if TARGET_SOCFPGA_TERASIC_DE10_NANO
+	default "socfpga_dm_socdk" if TARGET_SOCFPGA_DM_SIMICS
+	default "socfpga_dm_socdk" if TARGET_SOCFPGA_DM_SOCDK
 	default "socfpga_is1" if TARGET_SOCFPGA_IS1
 	default "socfpga_mcvevk" if TARGET_SOCFPGA_ARIES_MCVEVK
 	default "socfpga_sockit" if TARGET_SOCFPGA_TERASIC_SOCKIT
