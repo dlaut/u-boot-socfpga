@@ -44,7 +44,8 @@ int qspi_flash_software_reset(void);
 #endif
 
 #if defined(CONFIG_TARGET_SOCFPGA_STRATIX10) || \
-	defined(CONFIG_TARGET_SOCFPGA_AGILEX)
+	defined(CONFIG_TARGET_SOCFPGA_AGILEX) || \
+	defined(CONFIG_TARGET_SOCFPGA_DM)
 int socfpga_get_fpga_config(void);
 #endif
 
