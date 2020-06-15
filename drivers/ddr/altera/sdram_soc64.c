@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (C) 2016-2019 Intel Corporation <www.intel.com>
+ * Copyright (C) 2016-2020 Intel Corporation <www.intel.com>
  *
  */
 
@@ -293,6 +293,7 @@ static struct ram_ops altera_sdram_ops = {
 static const struct udevice_id altera_sdram_ids[] = {
 	{ .compatible = "altr,sdr-ctl-s10" },
 	{ .compatible = "intel,sdr-ctl-agilex" },
+	{ .compatible = "intel,sdr-ctl-dm" },
 	{ /* sentinel */ }
 };
 
