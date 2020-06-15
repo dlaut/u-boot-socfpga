@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * U-Boot additions
+ *
+ * Copyright (C) 2020 Intel Corporation <www.intel.com>
+ */
+
+#include "socfpga_dm_socdk-u-boot.dtsi"
+
+/ {
+	memory {
+		device_type = "memory";
+		reg = <0 0 0 0x04000000>;
+	};
+};

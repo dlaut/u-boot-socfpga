@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2020 Intel Corporation
+ */
+
+#include "socfpga_dm_socdk.dts"
+
+/ {
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		stdout-path = "serial0:4800n8";
+	};
+};
+
+&gpio1 {
+	status = "disabled";
+};
+
+&gmac0 {
+	status = "disabled";
+};
+
+&uart0 {
+	clock-frequency = <76800>;
+};
+
+&flash0 {
+	spi-max-frequency = <50000000>;
+};
