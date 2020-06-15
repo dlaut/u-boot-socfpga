@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0
  *
- * Copyright (C) 2017-2019 Intel Corporation <www.intel.com>
+ * Copyright (C) 2017-2020 Intel Corporation <www.intel.com>
  *
  */
 
@@ -8,7 +8,13 @@
 #define __CONFIG_SOCFPGA_SOC64_COMMON_H__
 
 #include <asm/arch/base_addr_s10.h>
+
+#if defined(CONFIG_TARGET_SOCFPGA_STRATIX10) || \
+	defined(CONFIG_TARGET_SOCFPGA_AGILEX)
 #include <asm/arch/handoff_s10.h>
+#else
+#include <asm/arch/handoff_soc64.h>
+#endif
 
 /*
  * U-Boot general configurations
