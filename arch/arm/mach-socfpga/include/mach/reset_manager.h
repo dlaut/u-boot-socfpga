@@ -44,7 +44,8 @@ void socfpga_per_reset_all(void);
 #elif defined(CONFIG_TARGET_SOCFPGA_ARRIA10)
 #include <asm/arch/reset_manager_arria10.h>
 #elif defined(CONFIG_TARGET_SOCFPGA_STRATIX10) || \
-	defined(CONFIG_TARGET_SOCFPGA_AGILEX)
+	defined(CONFIG_TARGET_SOCFPGA_AGILEX) || \
+	defined(CONFIG_TARGET_SOCFPGA_DM)
 #include <asm/arch/reset_manager_soc64.h>
 #endif
 
