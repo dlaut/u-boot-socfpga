@@ -17,6 +17,7 @@
 #include <wait_bit.h>
 #include <asm/arch/firewall.h>
 #include <asm/arch/handoff_soc64.h>
+#include <asm/arch/misc.h>
 #include <asm/arch/reset_manager.h>
 #include <asm/arch/system_manager.h>
 #include <asm/io.h>
@@ -227,13 +228,6 @@ struct ddr_handoff {
 	phys_addr_t phy_engine_handoff_base;
 	size_t phy_engine_total_length;
 	size_t phy_engine_handoff_length;
-};
-
-/* Reset type */
-enum reset_type {
-	warm_reset,
-	cold_reset,
-	rsu_reset
 };
 
 static int clr_ca_parity_error_status(struct ddr_handoff *ddr_handoff_info)

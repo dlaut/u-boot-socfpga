@@ -47,6 +47,7 @@ int qspi_flash_software_reset(void);
 	defined(CONFIG_TARGET_SOCFPGA_AGILEX) || \
 	defined(CONFIG_TARGET_SOCFPGA_DM)
 int socfpga_get_fpga_config(void);
+bool is_ddr_init_skipped(void);
 #endif
 
 void do_bridge_reset(int enable, unsigned int mask);
