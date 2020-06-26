@@ -756,7 +756,7 @@ static int init_phy(struct ddr_handoff *ddr_handoff_info)
 #ifdef CONFIG_TARGET_SOCFPGA_DM_SIMICS
 	u8 numdbyte = 0x0009;
 	u8 byte, lane;
-	u16 b_addr, c_addr;
+	u32 b_addr, c_addr;
 
 	/* Program TxOdtDrvStren bx_p0 */
 	for (byte = 0; byte < numdbyte; byte++) {
@@ -865,7 +865,7 @@ static void phy_init_engine(struct ddr_handoff *ddr_handoff_info)
 #ifdef CONFIG_TARGET_SOCFPGA_DM_SIMICS
 	u8 numdbyte = 0x0009;
 	u8 byte, timing_group;
-	u16 b_addr, c_addr;
+	u32 b_addr, c_addr;
 
 	/* Enable access to the PHY configuration registers */
 	clrbits_le16(ddr_handoff_info->phy_base + DDR_PHY_APBONLY0_OFFSET,
