@@ -754,7 +754,7 @@ static int init_phy(struct ddr_handoff *ddr_handoff_info)
 	}
 
 #ifdef CONFIG_TARGET_SOCFPGA_DM_SIMICS
-	u8 numdbyte = 0x0008;
+	u8 numdbyte = 0x0009;
 	u8 byte, lane;
 	u16 b_addr, c_addr;
 
@@ -863,7 +863,7 @@ static void phy_init_engine(struct ddr_handoff *ddr_handoff_info)
 	}
 
 #ifdef CONFIG_TARGET_SOCFPGA_DM_SIMICS
-	u8 numdbyte = 0x0008;
+	u8 numdbyte = 0x0009;
 	u8 byte, timing_group;
 	u16 b_addr, c_addr;
 
