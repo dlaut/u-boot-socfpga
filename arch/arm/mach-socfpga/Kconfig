@@ -18,7 +18,7 @@ config NR_DRAM_BANKS
 
 config SECURE_VAB_AUTH
 	bool "Enable boot image authentication with Secure Device Manager"
-	depends on TARGET_SOCFPGA_AGILEX
+	depends on TARGET_SOCFPGA_AGILEX || TARGET_SOCFPGA_DM
 	select FIT_IMAGE_POST_PROCESS
 	select SHA384
 	select SPL_FIT_IMAGE_POST_PROCESS
