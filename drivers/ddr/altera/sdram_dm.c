@@ -580,7 +580,7 @@ static int scrubbing_ddr_config(struct ddr_handoff *ddr_handoff_info)
 	return 0;
 }
 
-static int init_umctl2(struct ddr_handoff *ddr_handoff_info)
+static int init_umctl2(struct ddr_handoff *ddr_handoff_info, u32 *user_backup)
 {
 	u32 handoff_table[ddr_handoff_info->umctl2_handoff_length];
 	u32 i, value, expected_value;
@@ -631,6 +631,10 @@ static int init_umctl2(struct ddr_handoff *ddr_handoff_info)
 		debug("rd = 0x%08x\n", readl((uintptr_t)(handoff_table[i] +
 		      ddr_handoff_info->umctl2_base)));
 	}
+
+	/* Backup user settings, restore after DDR up running */
+	*user_backup = readl(ddr_handoff_info->umctl2_base +
+			     DDR4_PWRCTL_OFFSET);
 
 	/* Polling granularity of refresh mode change to fixed 2x (DDR4) */
 	value = readl(ddr_handoff_info->umctl2_base + DDR4_RFSHCTL3_OFFSET) &
@@ -1005,7 +1009,7 @@ int enable_ddr_clock(void)
 
 int sdram_mmr_init_full(struct udevice *dev)
 {
-	u32 value, backup;
+	u32 value, user_backup;
 	u32 start = get_timer(0);
 	int ret;
 	bd_t bd;
@@ -1037,11 +1041,8 @@ int sdram_mmr_init_full(struct udevice *dev)
 	if (ret)
 		return ret;
 
-	/* Backup user settings, restore after DDR up running */
-	backup = readl(ddr_handoff_info.umctl2_base + DDR4_PWRCTL_OFFSET);
-
 	/* Initialize DDR controller */
-	ret = init_umctl2(&ddr_handoff_info);
+	ret = init_umctl2(&ddr_handoff_info, &user_backup);
 	if (ret) {
 		debug("%s: Failed to inilialize DDR controller\n", __func__);
 		return ret;
@@ -1173,7 +1174,7 @@ int sdram_mmr_init_full(struct udevice *dev)
 	}
 
 	/* Restore user settings */
-	writel(backup, ddr_handoff_info.umctl2_base + DDR4_PWRCTL_OFFSET);
+	writel(user_backup, ddr_handoff_info.umctl2_base + DDR4_PWRCTL_OFFSET);
 
 	/* Enable input traffic per port */
 	setbits_le32(ddr_handoff_info.umctl2_base + DDR4_PCTRL0_OFFSET,
