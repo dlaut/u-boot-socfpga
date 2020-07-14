@@ -23,26 +23,6 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#if defined(CONFIG_TARGET_SOCFPGA_DM_SIMICS) && !defined(HANDOFF)
-static void uart0_pinmux(void)
-{
-	/* pin0sel - uart0.cts_n */
-	writel(5, socfpga_get_sysmgr_addr() + SYSMGR_SOC64_PINSEL0);
-
-	/* pin1sel - uart0.rts_n */
-	writel(5, socfpga_get_sysmgr_addr() + SYSMGR_SOC64_PINSEL0 + 4);
-
-	/* pin2sel - uart0.tx */
-	writel(5, socfpga_get_sysmgr_addr() + SYSMGR_SOC64_PINSEL0 + 8);
-
-	/* pin3sel - uart0.rx */
-	writel(5, socfpga_get_sysmgr_addr() + SYSMGR_SOC64_PINSEL0 + 12);
-
-	/* uart0_usefpga */
-	writel(5, socfpga_get_sysmgr_addr() + SYSMGR_SOC64_UART0_USEFPGA);
-}
-#endif
-
 void board_init_f(ulong dummy)
 {
 	int ret;
@@ -70,11 +50,7 @@ void board_init_f(ulong dummy)
 
 	timer_init();
 
-#if defined(CONFIG_TARGET_SOCFPGA_DM_SIMICS) && !defined(HANDOFF)
-	uart0_pinmux();
-#else
 	sysmgr_pinmux_init();
-#endif
 
 	preloader_console_init();
 
