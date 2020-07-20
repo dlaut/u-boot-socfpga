@@ -1010,171 +1010,185 @@ int sdram_mmr_init_full(struct udevice *dev)
 	struct ddr_handoff ddr_handoff_info;
 	struct altera_sdram_priv *priv = dev_get_priv(dev);
 
-	printf("%s: SDRAM init in progress ...\n", __func__);
+	if (!is_ddr_init_skipped()) {
+		printf("%s: SDRAM init in progress ...\n", __func__);
 
-	ret = populate_ddr_handoff(&ddr_handoff_info);
-	if (ret) {
-		debug("%s: Failed to populate DDR handoff\n", __func__);
-		return ret;
-	}
-
-	/*
-	 * Polling reset complete, must be high to ensure DDR subsystem in
-	 * complete reset state before init DDR clock and DDR controller
-	 */
-	ret = wait_for_bit_le32((const void *)MEM_RST_MGR_STATUS_REG,
-				MEM_RST_MGR_STATUS_RESET_COMPLETE, true,
-				TIMEOUT_200MS, false);
-	if (ret) {
-		debug("%s: Timeout while waiting for", __func__);
-		debug(" reset complete done\n");
-		return ret;
-	}
-
-	ret = enable_ddr_clock();
-	if (ret)
-		return ret;
-
-	/* Initialize DDR controller */
-	ret = init_umctl2(&ddr_handoff_info, &user_backup);
-	if (ret) {
-		debug("%s: Failed to inilialize DDR controller\n", __func__);
-		return ret;
-	}
-
-	/* Initialize DDR PHY */
-	ret = init_phy(&ddr_handoff_info);
-	if (ret) {
-		debug("%s: Failed to inilialize DDR PHY\n", __func__);
-		return ret;
-	}
-
-	/* Reset ARC processor when no using for security purpose */
-	setbits_le16(ddr_handoff_info.phy_base + DDR_PHY_MICRORESET_OFFSET,
-		     DDR_PHY_MICRORESET_RESET);
-
-	/* DDR freq set to support DDR4-3200 */
-	phy_init_engine(&ddr_handoff_info);
-
-	/* Trigger memory controller to init SDRAM */
-	/* Enable quasi-dynamic programing of the controller registers */
-	clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_SWCTL_OFFSET,
-		     DDR4_SWCTL_SW_DONE);
-
-	ret = enable_quasi_dynamic_reg_grp3(&ddr_handoff_info);
-	if (ret)
-		return ret;
-
-	/* Start DFI init sequence */
-	setbits_le32(ddr_handoff_info.umctl2_base + DDR4_DFIMISC_OFFSET,
-		     DDR4_DFIMISC_DFI_INIT_START);
-
-	/* Complete quasi-dynamic register programming */
-	setbits_le32(ddr_handoff_info.umctl2_base + DDR4_SWCTL_OFFSET,
-		     DDR4_SWCTL_SW_DONE);
-
-	/* Polling programming done */
-	ret = wait_for_bit_le32((const void *)(ddr_handoff_info.umctl2_base +
-				DDR4_SWSTAT_OFFSET), DDR4_SWSTAT_SW_DONE_ACK,
-				true, TIMEOUT_200MS, false);
-	if (ret) {
-		debug("%s: Timeout while waiting for", __func__);
-		debug(" programming done\n");
-		return ret;
-	}
-
-	/* Polling DFI init complete */
-	ret = wait_for_bit_le32((const void *)(ddr_handoff_info.umctl2_base +
-				DDR4_DFISTAT_OFFSET), DDR4_DFI_INIT_COMPLETE,
-				true, TIMEOUT_200MS, false);
-	if (ret) {
-		debug("%s: Timeout while waiting for", __func__);
-		debug(" DFI init done\n");
-		return ret;
-	}
-
-	debug("DFI init completed.\n");
-
-	/* Enable quasi-dynamic programing of the controller registers */
-	clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_SWCTL_OFFSET,
-		     DDR4_SWCTL_SW_DONE);
-
-	ret = enable_quasi_dynamic_reg_grp3(&ddr_handoff_info);
-	if (ret)
-		return ret;
-
-	/* Stop DFI init sequence */
-	clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_DFIMISC_OFFSET,
-		     DDR4_DFIMISC_DFI_INIT_START);
-
-	/* Unmasking dfi init complete */
-	setbits_le32(ddr_handoff_info.umctl2_base + DDR4_DFIMISC_OFFSET,
-		     DDR4_DFIMISC_DFI_INIT_COMPLETE_EN);
-
-	/* Software exit from self-refresh */
-	clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_PWRCTL_OFFSET,
-		     DDR4_PWRCTL_SELFREF_SW);
-
-	/* Complete quasi-dynamic register programming */
-	setbits_le32(ddr_handoff_info.umctl2_base + DDR4_SWCTL_OFFSET,
-		     DDR4_SWCTL_SW_DONE);
-
-	/* Polling programming done */
-	ret = wait_for_bit_le32((const void *)(ddr_handoff_info.umctl2_base +
-				DDR4_SWSTAT_OFFSET), DDR4_SWSTAT_SW_DONE_ACK,
-				true, TIMEOUT_200MS, false);
-	if (ret) {
-		debug("%s: Timeout while waiting for", __func__);
-		debug(" programming done\n");
-		return ret;
-	}
-
-	debug("DDR programming done\n");
-
-	/* Polling until SDRAM entered normal operating mode */
-	value = readl(ddr_handoff_info.umctl2_base + DDR4_STAT_OFFSET) &
-		      DDR4_STAT_OPERATING_MODE;
-	while (value != NORMAL_OPM) {
-		if (get_timer(start) > TIMEOUT_200MS) {
-			debug("%s: Timeout while waiting for",
-			      __func__);
-			debug(" DDR enters normal operating mode\n");
-			return -ETIMEDOUT;
-		}
-
-		value = readl(ddr_handoff_info.umctl2_base +
-			      DDR4_STAT_OFFSET) & DDR4_STAT_OPERATING_MODE;
-
-		udelay(1);
-		WATCHDOG_RESET();
-	}
-
-	debug("DDR entered normal operating mode\n");
-
-	/* Enabling auto refresh */
-	clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_RFSHCTL3_OFFSET,
-		     DDR4_RFSHCTL3_DIS_AUTO_REFRESH);
-
-	/* Checking ECC is enabled? */
-	value = readl(ddr_handoff_info.umctl2_base + DDR4_ECCCFG0_OFFSET) &
-		      DDR4_ECC_MODE;
-	if (value) {
-		printf("%s: ECC is enabled\n", __func__);
-		ret = scrubbing_ddr_config(&ddr_handoff_info);
+		ret = populate_ddr_handoff(&ddr_handoff_info);
 		if (ret) {
-			debug("%s: Failed to enable ECC\n", __func__);
+			debug("%s: Failed to populate DDR handoff\n", __func__);
 			return ret;
 		}
+
+		/*
+		 * Polling reset complete, must be high to ensure DDR subsystem
+		 * in complete reset state before init DDR clock and DDR
+		 * controller
+		 */
+		ret = wait_for_bit_le32((const void *)MEM_RST_MGR_STATUS_REG,
+					MEM_RST_MGR_STATUS_RESET_COMPLETE, true,
+					TIMEOUT_200MS, false);
+		if (ret) {
+			debug("%s: Timeout while waiting for", __func__);
+			debug(" reset complete done\n");
+			return ret;
+		}
+
+		ret = enable_ddr_clock();
+		if (ret)
+			return ret;
+
+		/* Initialize DDR controller */
+		ret = init_umctl2(&ddr_handoff_info, &user_backup);
+		if (ret) {
+			debug("%s: Failed to inilialize DDR controller\n",
+			      __func__);
+			return ret;
+		}
+
+		/* Initialize DDR PHY */
+		ret = init_phy(&ddr_handoff_info);
+		if (ret) {
+			debug("%s: Failed to inilialize DDR PHY\n", __func__);
+			return ret;
+		}
+
+		/* Reset ARC processor when no using for security purpose */
+		setbits_le16(ddr_handoff_info.phy_base +
+			     DDR_PHY_MICRORESET_OFFSET,
+			     DDR_PHY_MICRORESET_RESET);
+
+		/* DDR freq set to support DDR4-3200 */
+		phy_init_engine(&ddr_handoff_info);
+
+		/* Trigger memory controller to init SDRAM */
+		/* Enable quasi-dynamic programing of controller registers */
+		clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_SWCTL_OFFSET,
+			     DDR4_SWCTL_SW_DONE);
+
+		ret = enable_quasi_dynamic_reg_grp3(&ddr_handoff_info);
+		if (ret)
+			return ret;
+
+		/* Start DFI init sequence */
+		setbits_le32(ddr_handoff_info.umctl2_base + DDR4_DFIMISC_OFFSET,
+			     DDR4_DFIMISC_DFI_INIT_START);
+
+		/* Complete quasi-dynamic register programming */
+		setbits_le32(ddr_handoff_info.umctl2_base + DDR4_SWCTL_OFFSET,
+			     DDR4_SWCTL_SW_DONE);
+
+		/* Polling programming done */
+		ret = wait_for_bit_le32((const void *)
+					(ddr_handoff_info.umctl2_base +
+					DDR4_SWSTAT_OFFSET),
+					DDR4_SWSTAT_SW_DONE_ACK, true,
+					TIMEOUT_200MS, false);
+		if (ret) {
+			debug("%s: Timeout while waiting for", __func__);
+			debug(" programming done\n");
+			return ret;
+		}
+
+		/* Polling DFI init complete */
+		ret = wait_for_bit_le32((const void *)
+					(ddr_handoff_info.umctl2_base +
+					DDR4_DFISTAT_OFFSET),
+					DDR4_DFI_INIT_COMPLETE, true,
+					TIMEOUT_200MS, false);
+		if (ret) {
+			debug("%s: Timeout while waiting for", __func__);
+			debug(" DFI init done\n");
+			return ret;
+		}
+
+		debug("DFI init completed.\n");
+
+		/* Enable quasi-dynamic programing of controller registers */
+		clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_SWCTL_OFFSET,
+			     DDR4_SWCTL_SW_DONE);
+
+		ret = enable_quasi_dynamic_reg_grp3(&ddr_handoff_info);
+		if (ret)
+			return ret;
+
+		/* Stop DFI init sequence */
+		clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_DFIMISC_OFFSET,
+			     DDR4_DFIMISC_DFI_INIT_START);
+
+		/* Unmasking dfi init complete */
+		setbits_le32(ddr_handoff_info.umctl2_base + DDR4_DFIMISC_OFFSET,
+			     DDR4_DFIMISC_DFI_INIT_COMPLETE_EN);
+
+		/* Software exit from self-refresh */
+		clrbits_le32(ddr_handoff_info.umctl2_base + DDR4_PWRCTL_OFFSET,
+			     DDR4_PWRCTL_SELFREF_SW);
+
+		/* Complete quasi-dynamic register programming */
+		setbits_le32(ddr_handoff_info.umctl2_base + DDR4_SWCTL_OFFSET,
+			     DDR4_SWCTL_SW_DONE);
+
+		/* Polling programming done */
+		ret = wait_for_bit_le32((const void *)
+					(ddr_handoff_info.umctl2_base +
+					DDR4_SWSTAT_OFFSET),
+					DDR4_SWSTAT_SW_DONE_ACK, true,
+					TIMEOUT_200MS, false);
+		if (ret) {
+			debug("%s: Timeout while waiting for", __func__);
+			debug(" programming done\n");
+			return ret;
+		}
+
+		debug("DDR programming done\n");
+
+		/* Polling until SDRAM entered normal operating mode */
+		value = readl(ddr_handoff_info.umctl2_base + DDR4_STAT_OFFSET) &
+			      DDR4_STAT_OPERATING_MODE;
+		while (value != NORMAL_OPM) {
+			if (get_timer(start) > TIMEOUT_200MS) {
+				debug("%s: Timeout while waiting for",
+				      __func__);
+				debug(" DDR enters normal operating mode\n");
+				return -ETIMEDOUT;
+			}
+
+			value = readl(ddr_handoff_info.umctl2_base +
+				      DDR4_STAT_OFFSET) &
+				      DDR4_STAT_OPERATING_MODE;
+
+			udelay(1);
+			WATCHDOG_RESET();
+		}
+
+		debug("DDR entered normal operating mode\n");
+
+		/* Enabling auto refresh */
+		clrbits_le32(ddr_handoff_info.umctl2_base +
+			     DDR4_RFSHCTL3_OFFSET,
+			     DDR4_RFSHCTL3_DIS_AUTO_REFRESH);
+
+		/* Checking ECC is enabled? */
+		value = readl(ddr_handoff_info.umctl2_base +
+			      DDR4_ECCCFG0_OFFSET) & DDR4_ECC_MODE;
+		if (value) {
+			printf("%s: ECC is enabled\n", __func__);
+			ret = scrubbing_ddr_config(&ddr_handoff_info);
+			if (ret) {
+				debug("%s: Failed to enable ECC\n", __func__);
+				return ret;
+			}
+		}
+
+		/* Restore user settings */
+		writel(user_backup, ddr_handoff_info.umctl2_base +
+		       DDR4_PWRCTL_OFFSET);
+
+		/* Enable input traffic per port */
+		setbits_le32(ddr_handoff_info.umctl2_base + DDR4_PCTRL0_OFFSET,
+			     DDR4_PCTRL0_PORT_EN);
+
+		printf("%s: DDR init success\n", __func__);
 	}
-
-	/* Restore user settings */
-	writel(user_backup, ddr_handoff_info.umctl2_base + DDR4_PWRCTL_OFFSET);
-
-	/* Enable input traffic per port */
-	setbits_le32(ddr_handoff_info.umctl2_base + DDR4_PCTRL0_OFFSET,
-		     DDR4_PCTRL0_PORT_EN);
-
-	printf("%s: DDR init success\n", __func__);
 
 	/* Get bank configuration from devicetree */
 	ret = fdtdec_decode_ram_size(gd->fdt_blob, NULL, 0, NULL,

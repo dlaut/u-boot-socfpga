@@ -78,7 +78,10 @@ static void clk_mem_basic_init(struct udevice *dev,
 
 static int socfpga_mem_clk_enable(struct clk *clk)
 {
+	const struct cm_config *cm_default_cfg = cm_get_default_config();
 	struct socfpga_mem_clk_platdata *plat = dev_get_platdata(clk->dev);
+
+	clk_mem_basic_init(dev, cm_default_cfg);
 
 	clk_mem_wait_for_lock(plat, MEMCLKMGR_STAT_ALLPLL_LOCKED_MASK);
 
@@ -96,15 +99,6 @@ static int socfpga_mem_clk_enable(struct clk *clk)
 	/* Take all ping pong counters out of reset */
 	CM_REG_CLRBITS(plat, MEMCLKMGR_MEMPLL_EXTCNTRST,
 		       MEMCLKMGR_EXTCNTRST_ALLCNTRST);
-
-	return 0;
-}
-
-static int socfpga_mem_clk_probe(struct udevice *dev)
-{
-	const struct cm_config *cm_default_cfg = cm_get_default_config();
-
-	clk_mem_basic_init(dev, cm_default_cfg);
 
 	return 0;
 }
@@ -136,7 +130,6 @@ U_BOOT_DRIVER(socfpga_dm_mem_clk) = {
 	.id		= UCLASS_CLK,
 	.of_match	= socfpga_mem_clk_match,
 	.ops		= &socfpga_mem_clk_ops,
-	.probe		= socfpga_mem_clk_probe,
 	.ofdata_to_platdata = socfpga_mem_clk_ofdata_to_platdata,
 	.platdata_auto_alloc_size = sizeof(struct socfpga_mem_clk_platdata),
 };
