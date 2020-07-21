@@ -63,7 +63,6 @@ static void clk_mem_basic_init(struct udevice *dev,
 
 	/* Put PLLs in Reset */
 	CM_REG_SETBITS(plat, MEMCLKMGR_MEMPLL_PLLCTRL,
-		       MEMCLKMGR_PLLCTRL_RST_N_MASK |
 		       MEMCLKMGR_PLLCTRL_BYPASS_MASK);
 
 	/* setup mem PLL */
@@ -74,7 +73,6 @@ static void clk_mem_basic_init(struct udevice *dev,
 
 	/* Take PLL out of reset and power up */
 	CM_REG_CLRBITS(plat, MEMCLKMGR_MEMPLL_PLLCTRL,
-		       MEMCLKMGR_PLLCTRL_RST_N_MASK |
 		       MEMCLKMGR_PLLCTRL_BYPASS_MASK);
 }
 
