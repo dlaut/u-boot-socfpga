@@ -81,7 +81,7 @@ static int socfpga_mem_clk_enable(struct clk *clk)
 	const struct cm_config *cm_default_cfg = cm_get_default_config();
 	struct socfpga_mem_clk_platdata *plat = dev_get_platdata(clk->dev);
 
-	clk_mem_basic_init(dev, cm_default_cfg);
+	clk_mem_basic_init(clk->dev, cm_default_cfg);
 
 	clk_mem_wait_for_lock(plat, MEMCLKMGR_STAT_ALLPLL_LOCKED_MASK);
 
