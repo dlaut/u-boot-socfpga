@@ -12,20 +12,23 @@
 #ifdef CONFIG_TARGET_SOCFPGA_DM_SIMICS
 
 #undef PHYS_SDRAM_1_SIZE
-#define PHYS_SDRAM_1_SIZE		(64 * 1024 * 1024)
+#define PHYS_SDRAM_1_SIZE		(2048 * 1024 * 1024)
 
 #undef CONFIG_SYS_BOOTM_LEN
-#define CONFIG_SYS_BOOTM_LEN		(10 * 1024 * 1024)
+#define CONFIG_SYS_BOOTM_LEN		(39 * 1024 * 1024)
 
 #undef CONFIG_BOOTARGS
-#define CONFIG_BOOTARGS "earlycon earlyprintk=ttyS0,4800 mem=64M"
-
+#ifdef CONFIG_SECURE_VAB_AUTH
+#define CONFIG_BOOTARGS "earlycon panic=-1 mem=2048M"
+#else
+#define CONFIG_BOOTARGS "earlycon panic=-1 earlyprintk=ttyS0,4800"
+#endif
 #endif
 
 #undef CONFIG_EXTRA_ENV_SETTINGS
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"loadaddr=" __stringify(CONFIG_SYS_LOAD_ADDR) "\0" \
-	"bootfile=Image\0" \
+	"bootfile=" CONFIG_BOOTFILE "\0" \
 	"fdt_addr=1100000\0" \
 	"fdtimage=" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0" \
 	"mmcroot=/dev/mmcblk0p2\0" \
@@ -35,6 +38,11 @@
 	"mmcload=mmc rescan;" \
 		"load mmc 0:1 ${loadaddr} ${bootfile};" \
 		"load mmc 0:1 ${fdt_addr} ${fdtimage}\0" \
+	"mmcvabboot=setenv bootargs " CONFIG_BOOTARGS \
+		" root=${mmcroot} rw rootwait;" \
+		"bootm ${loadaddr}\0" \
+	"mmcvabload=mmc rescan;" \
+		"load mmc 0:1 ${loadaddr} ${bootfile}\0" \
 	"ramboot=setenv bootargs " CONFIG_BOOTARGS";" \
 		"booti ${loadaddr} - ${fdt_addr}\0" \
 	"linux_qspi_enable=if sf probe; then " \
