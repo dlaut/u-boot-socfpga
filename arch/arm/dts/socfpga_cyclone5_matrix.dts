@@ -1,0 +1,110 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2012 Altera Corporation <www.altera.com>
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+
+#include "socfpga_cyclone5.dtsi"
+
+/ {
+	model = "Datalogic Matrix Cyclone V SoC";
+	compatible = "altr,socfpga-cyclone5-matrix", "altr,socfpga-cyclone5", "altr,socfpga";
+
+	chosen {
+		bootargs = "earlyprintk";
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		name = "memory";
+		device_type = "memory";
+		reg = <0x0 0x40000000>; /* 1GB */
+	};
+
+	aliases {
+		/* this allow the ethaddr uboot environmnet variable contents
+		 * to be added to the gmac1 device tree blob.
+		 */
+		ethernet0 = &gmac0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		status {
+			label = "led_status";
+			gpios = <&porta 16 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		good_red {
+			label = "led_good_red";
+			gpios = <&porta 17 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		good_green {
+			label = "led_good_green";
+			gpios = <&porta 18 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		ready {
+			label = "led_ready";
+			gpios = <&porta 19 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		com {
+			label = "led_com";
+			gpios = <&porta 23 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		trigger {
+			label = "led_trigger";
+			gpios = <&porta 24 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
+
+	regulator_3_3v: 3-3-v-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "3.3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+};
+
+&gmac0 {
+	status = "okay";
+	phy-mode = "rgmii";
+
+	rxd0-skew-ps = <0>;
+	rxd1-skew-ps = <0>;
+	rxd2-skew-ps = <0>;
+	rxd3-skew-ps = <0>;
+	txen-skew-ps = <0>;
+	txc-skew-ps = <1560>;
+	rxdv-skew-ps = <0>;
+	rxc-skew-ps = <1200>;
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&porta {
+	xpress_button {
+		gpio-hog;
+		input;
+		gpios = <15 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&mmc0 {
+	cd-gpios = <&portb 18 0>;
+	vmmc-supply = <&regulator_3_3v>;
+	vqmmc-supply = <&regulator_3_3v>;
+	status = "okay";
+};
