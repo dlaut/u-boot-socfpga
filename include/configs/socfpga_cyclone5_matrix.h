@@ -7,30 +7,12 @@
 
 #include <asm/arch/base_addr_ac5.h>
 
-/* Memory configurations */
+// Memory configurations
 #define PHYS_SDRAM_1_SIZE		0x40000000	/* 1GiB on SoCDK */
 
-/* Booting Linux */
+// Booting Linux
 #define CONFIG_LOADADDR		0x01000000
 #define CONFIG_SYS_LOAD_ADDR	CONFIG_LOADADDR
-
-/* QSPI boot */
-#define FDT_SIZE		__stringify(0x00010000)
-#define KERNEL_SIZE		__stringify(0x005d0000)
-#define QSPI_FDT_ADDR		__stringify(0x00220000)
-#define QSPI_KERNEL_ADDR	__stringify(0x00230000)
-
-#define SOCFPGA_BOOT_SETTINGS \
-	"fdt_size=" FDT_SIZE "\0" \
-	"kernel_size=" KERNEL_SIZE "\0" \
-	"qspi_fdt_addr=" QSPI_FDT_ADDR "\0" \
-	"qspi_kernel_addr=" QSPI_KERNEL_ADDR "\0" \
-	"qspiboot=setenv bootargs earlycon " \
-		"root=/dev/mtdblock1 rw rootfstype=jffs2; " \
-		"bootz ${kernel_addr_r} - ${fdt_addr_r}\0" \
-	"qspiload=sf probe; " \
-		"sf read ${kernel_addr_r} ${qspi_kernel_addr} ${kernel_size}; " \
-		"sf read ${fdt_addr_r} ${qspi_fdt_addr} ${fdt_size}\0"
 
 // TEMP
 #define DEVELOPMENT_MODE 1
@@ -46,7 +28,6 @@
 #define PRDMODE_DEBUG_SERIAL      "nulldev"
 
 #ifdef DEVELOPMENT_MODE
-	#warning "!!!Development mode enabled!!!"
 	#define DEFAULT_USER_RUN_LEVEL    DEVMODE_USER_RUN_LEVEL
 	#define DEFAULT_BOOTARGS_DEBUG    DEVMODE_BOOTARGS_DEBUG
 	#define DEFAULT_DEBUG_SERIAL      DEVMODE_DEBUG_SERIAL
@@ -85,7 +66,6 @@
 	"kernel_addr_r="__stringify(CONFIG_SYS_LOAD_ADDR)"\0" \
 	"fdt_addr_r=0x02000000\0" \
 	"ramdisk_addr_r=0x02300000\0" \
-	"ethaddr=AA:BB:CC:DD:EE:FF\0" \
 	"filekernel=zImage\0" \
 	"filedtb=socfpga.dtb\0" \
 	"filerootfs=rootfs.cpio.lz4.u-boot\0" \
@@ -123,7 +103,7 @@
 					"run mmcload;" \
 					"run mmcboot;" \
 					"echo Boot from PTS failed!;" \
-					"dlaledset 16 1;" \
+					"led led_status on;" \
 					"setenv boot_part boot; " \
 					"setenv boot_path Current;" \
 					"setenv boot_target default; " \
@@ -132,7 +112,7 @@
 			"fi\0" \
 	"checkpts=" \
 		"if ${mmcloadcmd} mmc 0:${mmcuserp} ${loadaddr} AppData/BootInfo.txt; then " \
-			"dlaledset 24 1;" \
+			"led led_trigger on;" \
 			"echo Boot PTS;" \
 			"setenv boot_part net; " \
 			"setenv boot_path matrix-soc-pts;" \
@@ -140,9 +120,9 @@
 			"setenv netretry no;" \
 			"run fpganetload;" \
 			"run netload;" \
-			"dlaledset 24 0;" \
+			"led led_trigger off;" \
 			"run mmcboot;" \
-			"dlaledset 16 1;" \
+			"led led_status on;" \
 			"setenv boot_part boot; " \
 			"setenv boot_path Current;" \
 			"setenv boot_target default; " \
@@ -180,19 +160,19 @@
 			"echo Booting update flag is set!;" \
 		"else " \
 			"if ${mmcloadcmd} mmc 0:${mmcloadp} ${loadaddr} /Update/Update.txt; then " \
-				"dlaledset 24 1;" \
+				"led led_trigger on;" \
 				"setenv boot_part boot; " \
 				"setenv boot_path Update;" \
 				"setenv boot_target default; " \
 				"run fpgaload;" \
 				"run mmcload;" \
-				"dlaledset 18 1;" \
+				"led led_good_red on;" \
 				"ext4write mmc 0:${mmcuserp} /UpdateBoot.txt $loadaddr 0x32;" \
-				"dlaledset 24 0;" \
-				"dlaledset 18 0;" \
+				"led led_trigger off;" \
+				"led led_good_red off;" \
 				"dlablinkall;run mmcboot;" \
 				"echo Update operation failed!;" \
-				"dlaledset 16 1;" \
+				"led led_status on;" \
 				"ext4write mmc 0:${mmcuserp} /UpdateFail.txt $loadaddr 0x32;" \
 				"setenv boot_part boot; " \
 				"setenv boot_path Current;" \
@@ -201,19 +181,17 @@
 			"fi;" \
 		"fi\0" \
 	"fpga=0\0" \
-	"fpgadata=0x2000000\0" \
-	"fpgadatasize=0x700000\0" \
 	"fpgaimage=soc_system.rbf\0" \
-	"fpgaload=if ${mmcloadcmd} mmc 0:${mmcloadp} $fpgadata ${boot_path}/$fpgaimage;" \
+	"fpgaload=if ${mmcloadcmd} mmc 0:${mmcloadp} $loadaddr ${boot_path}/$fpgaimage;" \
 		"then " \
-			"fpga load 0 $fpgadata $filesize;" \
+			"fpga load 0 $loadaddr $filesize;" \
 			"bridge enable; " \
 		"else " \
 			"echo FPGA binary not loaded; " \
 		"fi;\0" \
 	"fpganetload=" \
-		"tftp ${fpgadata} ${boot_path}/${fpgaimage};"\
-		"fpga load 0 ${fpgadata} ${filesize};" \
+		"tftp ${loadaddr} ${boot_path}/${fpgaimage};"\
+		"fpga load 0 ${loadaddr} ${filesize};" \
 		"bridge enable;\0" \
 	"updateinprogress=false\0" \
 	"userbootloader=false\0" \
@@ -236,17 +214,17 @@
 		"run mmcload;" \
 		"run mmcboot;" \
 		"echo Boot from Factory failed!;" \
-		"dlaledset 24 1;" \
+		"led led_trigger on;" \
 		"setenv boot_part net; " \
 		"setenv boot_path matrix-soc-recovery;" \
 		"setenv boot_target default; " \
 		"setenv netretry no;" \
 		"run fpganetload;" \
 		"run netload;" \
-		"dlaledset 24 0;" \
+		"led led_trigger off;" \
 		"run mmcboot;" \
 		"echo Boot from network failed! Nothing more to do...;" \
-		"dlaledset 16 1;" \
+		"led led_status on;" \
 		"\0" \
 	"fdt_append_bootinfo=" \
 		"fdt addr ${fdt_addr_r}; " \
