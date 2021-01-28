@@ -35,12 +35,18 @@
 	#define DEFAULT_USER_RUN_LEVEL    PRDMODE_USER_RUN_LEVEL
 	#define DEFAULT_BOOTARGS_DEBUG    PRDMODE_BOOTARGS_DEBUG
 	#define DEFAULT_DEBUG_SERIAL      PRDMODE_DEBUG_SERIAL
-	#define CONFIG_SILENT_CONSOLE     1
 #endif
 
 #define CONFIG_BOOTARGS " " DEFAULT_BOOTARGS_DEBUG " "
 
+#ifdef CONFIG_SILENT_CONSOLE
+	#define SILENT_VAR_VALUE "1"
+#else
+	#define SILENT_VAR_VALUE "0"
+#endif
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
+	"silent=" SILENT_VAR_VALUE "\0" \
 	"dlaboot=" \
 		"run checkmac; " \
 		"setenv boot_part boot; " \
