@@ -30,26 +30,11 @@ int board_late_init(void)
 #define MAC_ADDR0_STR               "macAddress"
 #define MAC_ADDR1_STR               "macAddress1"
 
-// #define GPIO0_BASE_ADDRESS          0xff708000       //! GPIO0 base address (size 4KB)
-// #define GPIO0_BUTTON                15
-
 #define LED_STATUS            "led_status"
 #define LED_GOOD_GREEN        "led_good_green"
 #define LED_READY             "led_ready"
 #define LED_COM               "led_com"
 #define LED_TRIGGER           "led_trigger"
-
-// #define LOWDRIVER_LEVEL_0           0
-// #define LOWDRIVER_LEVEL_1           1
-// #define LED_ACT_LOW                 0
-// #define LED_ACT_HIGH                1
-// #define PIN_GET_VAL(csr,pos)       (((csr)->ALT_GPIO0_EXT_PORTA >> pos) & 0x00000001)
-// #define PIN_SET_VAL(csr,pos)       ((csr)->ALT_GPIO0_SWPORTA_DR |= (0x00000001 << pos))
-// #define PIN_RESET_VAL(csr,pos)     ((csr)->ALT_GPIO0_SWPORTA_DR &= ~(0x00000001 << pos))
-// #define INPUT_GET(csr,pos,act)     (PIN_GET_VAL(csr,pos) == act ? LOWDRIVER_LEVEL_1 : LOWDRIVER_LEVEL_0)
-// #define OUTPUT_GET(csr,pos,act)    (PIN_GET_VAL(csr,pos) == act ? LOWDRIVER_LEVEL_1 : LOWDRIVER_LEVEL_0)
-// #define OUTPUT_SET(csr,pos,act)    if(act == 1) PIN_SET_VAL(csr,pos);   else PIN_RESET_VAL(csr,pos)
-// #define OUTPUT_RESET(csr,pos,act)  if(act == 1) PIN_RESET_VAL(csr,pos); else PIN_SET_VAL(csr,pos)
 
 #define MODE_STANDARD              0
 #define MODE_DEFAULT_WAIT          10
@@ -62,41 +47,6 @@ int board_late_init(void)
 
 
 ///////// STRUCTURE DEFINITION ////////////////////////////////////////////////
-
-//! HPS fixed register
-/*typedef struct
-{
-	volatile unsigned int ALT_GPIO0_SWPORTA_DR;    // 0x00
-	volatile unsigned int ALT_GPIO0_SWPORTA_DDR;   // 0x04
-	volatile unsigned int RESERVED_0;              // 0x08
-	volatile unsigned int RESERVED_1;              // 0x0C
-	volatile unsigned int RESERVED_2;              // 0x10
-	volatile unsigned int RESERVED_3;              // 0x14
-	volatile unsigned int RESERVED_4;              // 0x18
-	volatile unsigned int RESERVED_5;              // 0x1C
-	volatile unsigned int RESERVED_6;              // 0x20
-	volatile unsigned int RESERVED_7;              // 0x24
-	volatile unsigned int RESERVED_8;              // 0x28
-	volatile unsigned int RESERVED_9;              // 0x2C
-	volatile unsigned int ALT_GPIO0_INTEN;         // 0x30
-	volatile unsigned int ALT_GPIO0_INTMSK;        // 0x34
-	volatile unsigned int ALT_GPIO0_INTTYPE_LEVEL; // 0x38
-	volatile unsigned int ALT_GPIO0_INT_POL;       // 0x3C
-	volatile unsigned int ALT_GPIO0_INTSTAT;       // 0x40
-	volatile unsigned int ALT_GPIO0_RAW_INTSTAT;   // 0x44
-	volatile unsigned int ALT_GPIO0_DEBOUNCE;      // 0x48
-	volatile unsigned int ALT_GPIO0_PORTA_EOI;     // 0x4C
-	volatile unsigned int ALT_GPIO0_EXT_PORTA;     // 0x50
-	volatile unsigned int RESERVED_10;             // 0x54
-	volatile unsigned int RESERVED_11;             // 0x58
-	volatile unsigned int RESERVED_12;             // 0x5C
-	volatile unsigned int ALT_GPIO0_LS_SYNC;       // 0x60
-	volatile unsigned int ALT_GPIO0_ID_CODE;       // 0x64
-	volatile unsigned int RESERVED_13;             // 0x68
-	volatile unsigned int ALT_GPIO0_VER_ID_CODE;   // 0x6C
-	volatile unsigned int ALT_GPIO0_CFG_REG2;      // 0x70
-	volatile unsigned int ALT_GPIO0_CFG_REG1;      // 0x74
-} DgtGPIOMngControllerCsr;*/
 
 
 ///////// UTILITY FUNCTIONS ///////////////////////////////////////////////////
@@ -184,54 +134,6 @@ static char *dla_utils_getAndSetMacAddress(int n, char *in)
 	return NULL;
 }
 
-// static int dla_utils_led_check(unsigned long id)
-// {
-// 	switch (id)
-// 	{
-// 		case GPIO0_LED_STATUS:
-// 		case GPIO0_LED_ETH:
-// 		case GPIO0_LED_COM:
-// 		case GPIO0_LED_TRIGGER:
-// 		case GPIO0_LED_GOOD:
-// 		case GPIO0_LED_READY:
-// 			return 0;
-
-// 		default:
-// 			break;
-// 	}
-// 	return -1;
-// }
-
-// static int dla_utils_led_get_act(unsigned long id, unsigned long *act)
-// {
-// 	switch (id)
-// 	{
-// 		case GPIO0_LED_STATUS:
-// 		case GPIO0_LED_ETH:
-// 		case GPIO0_LED_COM:
-// 		case GPIO0_LED_TRIGGER:
-// 			*act = LED_ACT_LOW;
-// 			break;
-
-// 		case GPIO0_LED_GOOD:
-// 		case GPIO0_LED_READY:
-// 			*act = LED_ACT_HIGH;
-// 			break;
-
-// 		default:
-// 			return -1;
-// 	}
-// 	return 0;
-// }
-
-// static int dla_utils_gpio_get(unsigned long id)
-// {
-// 	unsigned long act = LED_ACT_HIGH;
-// 	volatile DgtGPIOMngControllerCsr * csr = (DgtGPIOMngControllerCsr *) GPIO0_BASE_ADDRESS;
-// 	dla_utils_led_get_act(id, &act);
-// 	return OUTPUT_GET(csr, id, act);
-// }
-
 static int dla_utils_led_set_state(const char *label, enum led_state_t state)
 {
 	struct udevice * led;
@@ -301,15 +203,6 @@ static int dla_read_mac(struct cmd_tbl *cmdtp, int flag, int argc, char * const 
  */
 static int is_button_pressed(void)
 {
-	/*uint32_t act = LED_ACT_HIGH;
-	char * button_act_level = env_get("buttonactlevel");
-	if (button_act_level != NULL)
-	{
-		act = ((strcmp(button_act_level, "low") == 0) ? LED_ACT_LOW : LED_ACT_HIGH);
-	}
-	volatile DgtGPIOMngControllerCsr * csr = (DgtGPIOMngControllerCsr *) GPIO0_BASE_ADDRESS;
-	return (INPUT_GET(csr, GPIO0_BUTTON, act) == LOWDRIVER_LEVEL_1);*/
-
 	struct gpio_desc * gpio;
 	if (gpio_hog_lookup_name("xpress_button", &gpio) != 0)
 	{

@@ -14,27 +14,12 @@
 #define CONFIG_LOADADDR		0x01000000
 #define CONFIG_SYS_LOAD_ADDR	CONFIG_LOADADDR
 
-// TEMP
-#define DEVELOPMENT_MODE 1
-#define DEVMODE_SERIAL            "eserial0"    // Aux
-#define BUTTON_ACTIVE_LEVEL       "high"
-// -----
-
-#define DEVMODE_USER_RUN_LEVEL    "4"
-#define DEVMODE_BOOTARGS_DEBUG    "debug earlyprintk=serial,ttyS0," __stringify(CONFIG_BAUDRATE) " console=ttyS0," __stringify(CONFIG_BAUDRATE) " " DEVMODE_USER_RUN_LEVEL
-#define DEVMODE_DEBUG_SERIAL      DEVMODE_SERIAL
-#define PRDMODE_USER_RUN_LEVEL    "5"
-#define PRDMODE_BOOTARGS_DEBUG    PRDMODE_USER_RUN_LEVEL
-#define PRDMODE_DEBUG_SERIAL      "nulldev"
-
-#ifdef DEVELOPMENT_MODE
-	#define DEFAULT_USER_RUN_LEVEL    DEVMODE_USER_RUN_LEVEL
-	#define DEFAULT_BOOTARGS_DEBUG    DEVMODE_BOOTARGS_DEBUG
-	#define DEFAULT_DEBUG_SERIAL      DEVMODE_DEBUG_SERIAL
+#ifdef CONFIG_DEVELOPMENT_MODE
+	#define DEFAULT_USER_RUN_LEVEL    "4"
+	#define DEFAULT_BOOTARGS_DEBUG    "debug earlyprintk=serial,ttyS0," __stringify(CONFIG_BAUDRATE) " console=ttyS0," __stringify(CONFIG_BAUDRATE) " " DEFAULT_USER_RUN_LEVEL
 #else
-	#define DEFAULT_USER_RUN_LEVEL    PRDMODE_USER_RUN_LEVEL
-	#define DEFAULT_BOOTARGS_DEBUG    PRDMODE_BOOTARGS_DEBUG
-	#define DEFAULT_DEBUG_SERIAL      PRDMODE_DEBUG_SERIAL
+	#define DEFAULT_USER_RUN_LEVEL    "5"
+	#define DEFAULT_BOOTARGS_DEBUG    DEFAULT_USER_RUN_LEVEL
 #endif
 
 #define CONFIG_BOOTARGS " " DEFAULT_BOOTARGS_DEBUG " "
@@ -67,7 +52,6 @@
 	"serverip=192.168.3.101\0" \
 	"userrestoredefault=false\0" \
 	"userbootloader=false\0" \
-	"buttonactlevel=" BUTTON_ACTIVE_LEVEL "\0" \
 	"bootm_size=0xa000000\0" \
 	"kernel_addr_r="__stringify(CONFIG_SYS_LOAD_ADDR)"\0" \
 	"fdt_addr_r=0x02000000\0" \

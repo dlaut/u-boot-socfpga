@@ -1,0 +1,3 @@
+config DEVELOPMENT_MODE
+    bool "Boot linux in development mode"
+    default y
