@@ -352,7 +352,10 @@ dtb-$(CONFIG_ARCH_SOCFPGA) +=				\
 	socfpga_cyclone5_mcvevk.dtb			\
 	socfpga_cyclone5_is1.dtb			\
 	socfpga_cyclone5_socdk.dtb			\
-	socfpga_cyclone5_matrix.dtb			\
+	socfpga_cyclone5_matrix_gel8237a.dtb	\
+	socfpga_cyclone5_matrix_gel8797a.dtb	\
+	socfpga_cyclone5_matrix_gel9508a.dtb	\
+	socfpga_cyclone5_matrix_gel9803.dtb		\
 	socfpga_cyclone5_dbm_soc1.dtb			\
 	socfpga_cyclone5_de0_nano_soc.dtb		\
 	socfpga_cyclone5_de1_soc.dtb			\

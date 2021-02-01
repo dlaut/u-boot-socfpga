@@ -1,0 +1,23 @@
+#include "socfpga_cyclone5_matrix.dtsi"
+
+&gmac0 {
+	status = "okay";
+	phy-mode = "gmii";
+
+	rxd0-skew-ps = <0>;
+	rxd1-skew-ps = <0>;
+	rxd2-skew-ps = <0>;
+	rxd3-skew-ps = <0>;
+	txen-skew-ps = <0>;
+	txc-skew-ps = <1560>;
+	rxdv-skew-ps = <0>;
+	rxc-skew-ps = <1200>;
+};
+
+&porta {
+	xpress_button {
+		gpio-hog;
+		input;
+		gpios = <15 GPIO_ACTIVE_LOW>;
+	};
+};
