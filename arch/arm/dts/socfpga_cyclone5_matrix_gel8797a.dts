@@ -1,6 +1,6 @@
 #include "socfpga_cyclone5_matrix.dtsi"
 
-&gmac0 {
+&gmac1 {
 	status = "okay";
 	phy-mode = "mii";
 
