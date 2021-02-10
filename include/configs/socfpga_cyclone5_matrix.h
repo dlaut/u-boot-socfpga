@@ -122,7 +122,7 @@
 		"dlabuttonmng;" \
 		"if ${userrestoredefault}; then " \
 			"echo Restore defaults;" \
-			"ext4write mmc 0:${mmcuserp} /RestoreDefaults.txt $loadaddr 0x32;" \
+			"ext4write mmc 0:${mmcuserp} $loadaddr /RestoreDefaults.txt 0x32;" \
 			"setenv userrestoredefault false;" \
 			"dlabeep;" \
 		"fi;" \
@@ -157,13 +157,13 @@
 				"run fpgaload;" \
 				"run mmcload;" \
 				"led led_good_red on;" \
-				"ext4write mmc 0:${mmcuserp} /UpdateBoot.txt $loadaddr 0x32;" \
+				"ext4write mmc 0:${mmcuserp} $loadaddr /UpdateBoot.txt 0x32;" \
 				"led led_trigger off;" \
 				"led led_good_red off;" \
 				"dlablinkall;run mmcboot;" \
 				"echo Update operation failed!;" \
 				"led led_status on;" \
-				"ext4write mmc 0:${mmcuserp} /UpdateFail.txt $loadaddr 0x32;" \
+				"ext4write mmc 0:${mmcuserp} $loadaddr /UpdateFail.txt 0x32;" \
 				"setenv boot_part boot; " \
 				"setenv boot_path Current;" \
 				"setenv boot_target default; " \
