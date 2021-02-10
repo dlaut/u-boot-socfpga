@@ -127,7 +127,7 @@
 			"dlabeep;" \
 		"fi;" \
 		"if ${userbootloader}; then " \
-			"if dlals mmc 0:${mmcbootp} /Loader; then " \
+			"if ext4ls mmc 0:${mmcbootp} /Loader; then " \
 				"echo Boot Loader;" \
 				"setenv boot_part boot; " \
 				"setenv boot_path Loader;" \
