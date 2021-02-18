@@ -10,6 +10,9 @@
 // Memory configurations
 #define PHYS_SDRAM_1_SIZE		0x40000000	/* 1GiB on SoCDK */
 
+// Increment PHY autonegotiation timeout to 15s (default is 4s and sometimes it is not enough)
+#define PHY_ANEG_TIMEOUT	15000
+
 // Booting Linux
 #define CONFIG_LOADADDR		0x01000000
 #define CONFIG_SYS_LOAD_ADDR	CONFIG_LOADADDR
