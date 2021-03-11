@@ -45,9 +45,7 @@
 		"run checkmotorrurnin; " \
 		"run checkpts; " \
 		"run checkupdate; " \
-		"run mmcload; " \
-		"dlablinkall; " \
-		"run mmcboot; " \
+		"run mmcload && dlablinkall && run mmcboot; " \
 		"run recoverdevice\0" \
 	"userrunlevel=" DEFAULT_USER_RUN_LEVEL "\0" \
 	"bootargs_debug=" DEFAULT_BOOTARGS_DEBUG "\0" \
@@ -69,52 +67,54 @@
 	"mmcbootp=1\0" \
 	"mmcrecp=5\0" \
 	"mmcuserp=6\0" \
-	"mmcload=mmc rescan;" \
-		"${mmcloadcmd} mmc 0:${mmcloadp} ${kernel_addr_r} ${boot_path}/${filekernel};" \
-		"${mmcloadcmd} mmc 0:${mmcloadp} ${fdt_addr_r} ${boot_path}/${filedtb};" \
+	"mmcload=mmc rescan && " \
+		"${mmcloadcmd} mmc 0:${mmcloadp} ${kernel_addr_r} ${boot_path}/${filekernel} && " \
+		"${mmcloadcmd} mmc 0:${mmcloadp} ${fdt_addr_r} ${boot_path}/${filedtb} && " \
 		"${mmcloadcmd} mmc 0:${mmcloadp} ${ramdisk_addr_r} ${boot_path}/${filerootfs};\0" \
 	"mmcboot=" \
-		"run fdt_append_bootinfo; " \
-		"setenv bootargs ${bootargs_debug} rootfstype=ramfs root=/dev/ram0;" \
+		"run fdt_append_bootinfo && " \
+		"setenv bootargs ${bootargs_debug} rootfstype=ramfs root=/dev/ram0 && " \
 		"bootz ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r};\0" \
 	"netload=" \
-		"tftp ${fdt_addr_r} ${boot_path}/${filedtb};" \
-		"tftp ${kernel_addr_r} ${boot_path}/${filekernel};" \
+		"tftp ${fdt_addr_r} ${boot_path}/${filedtb} && " \
+		"tftp ${kernel_addr_r} ${boot_path}/${filekernel} && " \
 		"tftp ${ramdisk_addr_r} ${boot_path}/${filerootfs};\0" \
 	"checkmac=" \
 		"echo Reading MAC;" \
 		"${mmcloadcmd} mmc 0:${mmcrecp} ${loadaddr} ${filenetwork};" \
 		"dlamac mmc 0:${mmcrecp} ${filenetwork} ${filesize};\0" \
 	"checkmotorrurnin=" \
-			"if ${mmcloadcmd} mmc 0:${mmcuserp} ${loadaddr} AppData/RunIn.ini; then " \
-				"echo Boot PTS from flash with RurnIn test;" \
-				"setenv boot_part recovery; " \
-				"setenv boot_path PTS;" \
-				"setenv boot_target pts; " \
-				"setenv mmcloadp ${mmcrecp};" \
-					"run fpgaload;" \
-					"run mmcload;" \
-					"run mmcboot;" \
-					"echo Boot from PTS failed!;" \
-					"led led_status on;" \
-					"setenv boot_part boot; " \
-					"setenv boot_path Current;" \
-					"setenv boot_target default; " \
-					"setenv mmcloadp ${mmcbootp};" \
-					"run fpgaload;" \
-			"fi\0" \
+		"if ${mmcloadcmd} mmc 0:${mmcuserp} ${loadaddr} AppData/RunIn.ini; then " \
+			"echo Boot PTS from flash with RurnIn test;" \
+			"setenv boot_part recovery; " \
+			"setenv boot_path PTS;" \
+			"setenv boot_target pts; " \
+			"setenv mmcloadp ${mmcrecp};" \
+			"run fpgaload && run mmcload && run mmcboot;" \
+			"echo Boot from PTS failed!;" \
+			"led led_status on;" \
+			"setenv boot_part boot; " \
+			"setenv boot_path Current;" \
+			"setenv boot_target default; " \
+			"setenv mmcloadp ${mmcbootp};" \
+			"run fpgaload;" \
+		"fi\0" \
 	"checkpts=" \
 		"if ${mmcloadcmd} mmc 0:${mmcuserp} ${loadaddr} AppData/BootInfo.txt; then " \
 			"led led_trigger on;" \
-			"echo Boot PTS;" \
+			"echo Boot PTS from flash;" \
+			"setenv boot_part boot; " \
+			"setenv boot_path PTS;" \
+			"setenv boot_target pts; " \
+			"setenv mmcloadp ${mmcbootp};" \
+			"run fpgaload && run mmcload && led led_trigger off && run mmcboot;" \
+			"led led_trigger on;" \
+			"echo Boot PTS from net;" \
 			"setenv boot_part net; " \
 			"setenv boot_path matrix-soc-pts;" \
 			"setenv boot_target pts; " \
 			"setenv netretry no;" \
-			"run fpganetload;" \
-			"run netload;" \
-			"led led_trigger off;" \
-			"run mmcboot;" \
+			"run fpganetload && run netload && led led_trigger off && run mmcboot;" \
 			"led led_status on;" \
 			"setenv boot_part boot; " \
 			"setenv boot_path Current;" \
@@ -136,9 +136,7 @@
 				"setenv boot_path Loader;" \
 				"setenv boot_target recovery; " \
 				"setenv mmcloadp ${mmcbootp};" \
-				"run fpgaload;" \
-				"run mmcload;" \
-				"run mmcboot;" \
+				"run fpgaload && run mmcload && run mmcboot;" \
 				"setenv boot_part boot; " \
 				"setenv boot_path Current;" \
 				"setenv boot_target default; " \
@@ -157,13 +155,13 @@
 				"setenv boot_part boot; " \
 				"setenv boot_path Update;" \
 				"setenv boot_target default; " \
-				"run fpgaload;" \
-				"run mmcload;" \
-				"led led_good_red on;" \
-				"ext4write mmc 0:${mmcuserp} $loadaddr /UpdateBoot.txt 0x32;" \
-				"led led_trigger off;" \
-				"led led_good_red off;" \
-				"dlablinkall;run mmcboot;" \
+				"if run fpgaload && run mmcload; then " \
+					"led led_good_red on;" \
+					"ext4write mmc 0:${mmcuserp} $loadaddr /UpdateBoot.txt 0x32;" \
+					"led led_trigger off;" \
+					"led led_good_red off;" \
+					"dlablinkall; run mmcboot;" \
+				"fi; " \
 				"echo Update operation failed!;" \
 				"led led_status on;" \
 				"ext4write mmc 0:${mmcuserp} $loadaddr /UpdateFail.txt 0x32;" \
@@ -181,10 +179,11 @@
 			"bridge enable; " \
 		"else " \
 			"echo FPGA binary not loaded; " \
+			"false; " \
 		"fi;\0" \
 	"fpganetload=" \
-		"tftp ${loadaddr} ${boot_path}/${fpgaimage};"\
-		"fpga load 0 ${loadaddr} ${filesize};" \
+		"tftp ${loadaddr} ${boot_path}/${fpgaimage} && "\
+		"fpga load 0 ${loadaddr} ${filesize} && " \
 		"bridge enable;\0" \
 	"updateinprogress=false\0" \
 	"userbootloader=false\0" \
@@ -195,27 +194,20 @@
 		"setenv boot_path Rollback;" \
 		"setenv boot_target default; " \
 		"setenv mmcloadp ${mmcbootp};" \
-		"run fpgaload;" \
-		"run mmcload;" \
-		"run mmcboot;" \
+		"run fpgaload && run mmcload && run mmcboot;" \
 		"echo Boot from Rollback failed!;" \
 		"setenv boot_part recovery; " \
 		"setenv boot_path Factory;" \
 		"setenv boot_target default; " \
 		"setenv mmcloadp ${mmcrecp};" \
-		"run fpgaload;" \
-		"run mmcload;" \
-		"run mmcboot;" \
+		"run fpgaload && run mmcload && run mmcboot;" \
 		"echo Boot from Factory failed!;" \
 		"led led_trigger on;" \
 		"setenv boot_part net; " \
 		"setenv boot_path matrix-soc-recovery;" \
 		"setenv boot_target default; " \
 		"setenv netretry no;" \
-		"run fpganetload;" \
-		"run netload;" \
-		"led led_trigger off;" \
-		"run mmcboot;" \
+		"run fpganetload && run netload && led led_trigger off && run mmcboot;" \
 		"echo Boot from network failed! Nothing more to do...;" \
 		"led led_status on;" \
 		"\0" \
