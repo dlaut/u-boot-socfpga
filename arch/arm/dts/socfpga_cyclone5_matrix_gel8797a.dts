@@ -1,5 +1,11 @@
 #include "socfpga_cyclone5_matrix.dtsi"
 
+/ {
+	memory {
+		reg = <0x0 0x20000000>; /* 512MB */
+	};
+};
+
 &gmac1 {
 	status = "okay";
 	phy-mode = "mii";
